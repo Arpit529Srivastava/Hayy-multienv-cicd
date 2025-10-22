@@ -15,5 +15,5 @@ jobs:
       - name: Deploy to Dev-Docker
         run: |
           docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.GH_PAT }} ghcr.io
-          docker build -f app/Dockerfile -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend:latest .
+          docker build -f app/Dockerfile -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend:latest ./app
           docker push ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend:latest

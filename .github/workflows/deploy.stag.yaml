@@ -15,5 +15,5 @@ jobs:
       - name: Deploy to Staging-Docker
         run: |
           docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.GH_PAT }} ghcr.io
-          docker build -f app/Dockerfile.staging -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-stag:staging .
+          docker build -f app/Dockerfile.staging -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-stag:staging ./app
           docker push ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-stag:staging
