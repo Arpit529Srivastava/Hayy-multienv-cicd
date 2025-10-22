@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: hayy-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_DATABASE: hayy-tasks
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - hayy-network
+
+  api:
+    image: ghcr.io/arpit529srivastava/hayy-ai-backend:latest
+    container_name: hayy-api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - NODE_ENV=production
+      - MONGODB_URI=mongodb://mongodb:27017/hayy-tasks
+      - PORT=8000
+    depends_on:
+      - mongodb
+    networks:
+      - hayy-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:8000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+volumes:
+  mongodb_data:
+
+networks:
+  hayy-network:
+    driver: bridge
