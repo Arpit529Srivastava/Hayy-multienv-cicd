@@ -1,0 +1,19 @@
+name: Deploy to Prod
+
+on:
+    push:
+      branches:
+        - prod
+    
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Deploy to Prod-Docker
+        run: |
+          docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.GH_PAT }} ghcr.io
+          docker build -f app/Dockerfile.prod -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-prod:production .
+          docker push ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-prod:production
