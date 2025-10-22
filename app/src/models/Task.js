@@ -1,48 +1,51 @@
 const mongoose = require('mongoose');
 
-const taskSchema = new mongoose.Schema({
-  title: {
-    type: String,
-    required: [true, 'Title is required'],
-    maxlength: [100, 'Title cannot exceed 100 characters'],
-    trim: true
-  },
-  description: {
-    type: String,
-    maxlength: [500, 'Description cannot exceed 500 characters'],
-    trim: true,
-    default: ''
-  },
-  status: {
-    type: String,
-    enum: {
-      values: ['pending', 'in-progress', 'completed'],
-      message: 'Status must be one of: pending, in-progress, completed'
+const taskSchema = new mongoose.Schema(
+  {
+    title: {
+      type: String,
+      required: [true, 'Title is required'],
+      maxlength: [100, 'Title cannot exceed 100 characters'],
+      trim: true
     },
-    default: 'pending'
-  },
-  priority: {
-    type: String,
-    enum: {
-      values: ['low', 'medium', 'high'],
-      message: 'Priority must be one of: low, medium, high'
+    description: {
+      type: String,
+      maxlength: [500, 'Description cannot exceed 500 characters'],
+      trim: true,
+      default: ''
     },
-    default: 'medium'
-  },
-  dueDate: {
-    type: Date,
-    validate: {
-      validator: function(value) {
-        return !value || value > new Date();
+    status: {
+      type: String,
+      enum: {
+        values: ['pending', 'in-progress', 'completed'],
+        message: 'Status must be one of: pending, in-progress, completed'
       },
-      message: 'Due date must be in the future'
+      default: 'pending'
+    },
+    priority: {
+      type: String,
+      enum: {
+        values: ['low', 'medium', 'high'],
+        message: 'Priority must be one of: low, medium, high'
+      },
+      default: 'medium'
+    },
+    dueDate: {
+      type: Date,
+      validate: {
+        validator(value) {
+          return !value || value > new Date();
+        },
+        message: 'Due date must be in the future'
+      }
     }
+  },
+  {
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
   }
-}, {
-  timestamps: true,
-  toJSON: { virtuals: true },
-  toObject: { virtuals: true }
-});
+);
 
 // Indexes for performance
 taskSchema.index({ status: 1 });
@@ -51,17 +54,21 @@ taskSchema.index({ dueDate: 1 });
 taskSchema.index({ createdAt: -1 });
 
 // Virtual for overdue tasks
-taskSchema.virtual('isOverdue').get(function() {
-  return this.dueDate && this.dueDate < new Date() && this.status !== 'completed';
+taskSchema.virtual('isOverdue').get(function () {
+  return (
+    this.dueDate && this.dueDate < new Date() && this.status !== 'completed'
+  );
 });
 
 // Instance method to check if task is overdue
-taskSchema.methods.checkOverdue = function() {
-  return this.dueDate && this.dueDate < new Date() && this.status !== 'completed';
+taskSchema.methods.checkOverdue = function () {
+  return (
+    this.dueDate && this.dueDate < new Date() && this.status !== 'completed'
+  );
 };
 
 // Static method to get task statistics
-taskSchema.statics.getStatistics = async function() {
+taskSchema.statics.getStatistics = async function () {
   const stats = await this.aggregate([
     {
       $group: {
@@ -104,16 +111,18 @@ taskSchema.statics.getStatistics = async function() {
     }
   ]);
 
-  return stats[0] || {
-    totalTasks: 0,
-    pendingTasks: 0,
-    inProgressTasks: 0,
-    completedTasks: 0,
-    lowPriorityTasks: 0,
-    mediumPriorityTasks: 0,
-    highPriorityTasks: 0,
-    overdueTasks: 0
-  };
+  return (
+    stats[0] || {
+      totalTasks: 0,
+      pendingTasks: 0,
+      inProgressTasks: 0,
+      completedTasks: 0,
+      lowPriorityTasks: 0,
+      mediumPriorityTasks: 0,
+      highPriorityTasks: 0,
+      overdueTasks: 0
+    }
+  );
 };
 
 module.exports = mongoose.model('Task', taskSchema);

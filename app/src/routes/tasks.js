@@ -78,16 +78,16 @@ const validateTaskUpdate = [
 ];
 
 const validateObjectId = [
-  param('id')
-    .isMongoId()
-    .withMessage('Invalid task ID format')
+  param('id').isMongoId().withMessage('Invalid task ID format')
 ];
 
 const validateQueryParams = [
   query('status')
     .optional()
     .isIn(['pending', 'in-progress', 'completed'])
-    .withMessage('Status filter must be one of: pending, in-progress, completed'),
+    .withMessage(
+      'Status filter must be one of: pending, in-progress, completed'
+    ),
   query('priority')
     .optional()
     .isIn(['low', 'medium', 'high'])
@@ -103,19 +103,30 @@ const validateQueryParams = [
 ];
 
 // Routes
-router.route('/')
+router
+  .route('/')
   .get(validateQueryParams, checkValidationResult, asyncHandler(getTasks))
   .post(validateTaskCreation, checkValidationResult, asyncHandler(createTask));
 
-router.route('/stats')
-  .get(asyncHandler(getTaskStats));
+router.route('/stats').get(asyncHandler(getTaskStats));
 
-router.route('/overdue')
-  .get(validateQueryParams, checkValidationResult, asyncHandler(getOverdueTasks));
+router
+  .route('/overdue')
+  .get(
+    validateQueryParams,
+    checkValidationResult,
+    asyncHandler(getOverdueTasks)
+  );
 
-router.route('/:id')
+router
+  .route('/:id')
   .get(validateObjectId, checkValidationResult, asyncHandler(getTask))
-  .put(validateObjectId, validateTaskUpdate, checkValidationResult, asyncHandler(updateTask))
+  .put(
+    validateObjectId,
+    validateTaskUpdate,
+    checkValidationResult,
+    asyncHandler(updateTask)
+  )
   .delete(validateObjectId, checkValidationResult, asyncHandler(deleteTask));
 
 module.exports = router;

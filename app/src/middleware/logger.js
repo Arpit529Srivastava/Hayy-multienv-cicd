@@ -7,7 +7,7 @@ const levels = {
   warn: 1,
   info: 2,
   http: 3,
-  debug: 4,
+  debug: 4
 };
 
 // Define colors for each level
@@ -16,7 +16,7 @@ const colors = {
   warn: 'yellow',
   info: 'green',
   http: 'magenta',
-  debug: 'white',
+  debug: 'white'
 };
 
 // Tell winston that you want to link the colors
@@ -30,10 +30,10 @@ const transports = [
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
       winston.format.colorize({ all: true }),
       winston.format.printf(
-        (info) => `${info.timestamp} ${info.level}: ${info.message}`
+        info => `${info.timestamp} ${info.level}: ${info.message}`
       )
-    ),
-  }),
+    )
+  })
 ];
 
 // Add file transport in production
@@ -45,14 +45,14 @@ if (process.env.NODE_ENV === 'production') {
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.json()
-      ),
+      )
     }),
     new winston.transports.File({
       filename: path.join(process.cwd(), 'logs', 'combined.log'),
       format: winston.format.combine(
         winston.format.timestamp(),
         winston.format.json()
-      ),
+      )
     })
   );
 }
@@ -62,7 +62,7 @@ const logger = winston.createLogger({
   level: process.env.LOG_LEVEL || 'info',
   levels,
   transports,
-  exitOnError: false,
+  exitOnError: false
 });
 
 // Create logs directory if it doesn't exist (for production)

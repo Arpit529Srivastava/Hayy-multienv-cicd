@@ -1,9 +1,10 @@
-# Hayy Task Manager API
+# Hayy Multi-Environment CI/CD System
 
-A production-ready Node.js Task Manager REST API built with Express.js and MongoDB.
+A comprehensive, production-ready CI/CD pipeline for the Hayy Task Manager API with multi-environment deployment, automated testing, security scanning, and infrastructure monitoring.
 
-## Features
+## 🚀 Complete CI/CD Pipeline Features
 
+### **Application Features**
 - **Task CRUD Operations**: Create, read, update, and delete tasks
 - **Advanced Filtering**: Filter tasks by status and priority
 - **Pagination**: Efficient data retrieval with pagination support
@@ -15,34 +16,113 @@ A production-ready Node.js Task Manager REST API built with Express.js and Mongo
 - **Validation**: Input validation using express-validator
 - **Graceful Shutdown**: Proper cleanup on application termination
 
-## Tech Stack
+### **CI/CD Pipeline Features**
+- **Multi-Environment Deployment**: Dev, Staging, Production
+- **Automated Testing**: Unit, Integration, Performance tests
+- **Security Scanning**: Snyk, Trivy vulnerability scanning
+- **Code Quality**: ESLint, Prettier, Security audits
+- **Container Security**: Multi-stage Docker builds with security scanning
+- **Infrastructure as Code**: Terraform for AWS EKS + DocumentDB
+- **Drift Detection**: Automated infrastructure monitoring
+- **Monitoring**: Prometheus + Grafana observability
+- **Alerting**: Slack notifications, GitHub issues, PagerDuty
+- **Zero-Downtime Deployments**: Rolling updates with health checks
 
+## 🛠️ Tech Stack
+
+### **Application Stack**
 - **Node.js** v18+ with Express.js
-- **MongoDB** with Mongoose ODM
+- **MongoDB** with Mongoose ODM (DocumentDB in production)
 - **Winston** for logging
 - **Helmet** for security
 - **CORS** enabled
 - **express-validator** for input validation
 - **express-rate-limit** for rate limiting
 
-## Project Structure
+### **Infrastructure Stack**
+- **AWS EKS** (Kubernetes clusters)
+- **AWS DocumentDB** (MongoDB-compatible)
+- **GitHub Container Registry** (ghcr.io)
+- **Terraform** for Infrastructure as Code
+- **Prometheus + Grafana** for monitoring
+- **Slack** for notifications
+- **PagerDuty** for critical alerts
+
+### **CI/CD Tools**
+- **GitHub Actions** for CI/CD pipelines
+- **Docker** for containerization
+- **Trivy** for container security scanning
+- **Snyk** for dependency vulnerability scanning
+- **Jest** for testing
+- **ESLint + Prettier** for code quality
+
+## 📁 Project Structure
 
 ```
-src/
-├── index.js                 # Entry point
-├── config/
-│   └── database.js          # MongoDB connection
-├── models/
-│   └── Task.js              # Task schema
-├── routes/
-│   ├── tasks.js             # Task routes
-│   └── health.js            # Health routes
-├── controllers/
-│   └── taskController.js     # Business logic
-└── middleware/
-    ├── errorHandler.js      # Error handling
-    └── logger.js            # Request logging
+Hayy-multienv-cicd/
+├── app/                          # Node.js Application
+│   ├── src/                      # Source code
+│   │   ├── config/               # Database configuration
+│   │   ├── controllers/          # Business logic
+│   │   ├── middleware/           # Error handling, logging
+│   │   ├── models/               # Data models
+│   │   ├── routes/               # API routes
+│   │   └── index.js              # Application entry point
+│   ├── tests/                    # Test suites
+│   │   ├── unit/                 # Unit tests
+│   │   ├── integration/          # Integration tests
+│   │   └── performance/          # Performance tests
+│   ├── Dockerfile                # Multi-stage container build
+│   ├── package.json              # Dependencies and scripts
+│   └── jest.config.js            # Test configuration
+├── k8s/                          # Kubernetes Manifests
+│   ├── deployment.yaml           # Application deployment
+│   ├── service.yaml              # Service configuration
+│   └── configmap.yaml            # Environment configuration
+├── terraform/                    # Infrastructure as Code
+│   ├── main.tf                   # Main Terraform configuration
+│   ├── variables.tf              # Variable definitions
+│   ├── outputs.tf                # Output definitions
+│   └── environments/             # Environment-specific configs
+│       ├── dev.tfvars
+│       ├── staging.tfvars
+│       └── prod.tfvars
+├── monitoring/                   # Observability Configuration
+│   ├── prometheus-config.yaml    # Prometheus configuration
+│   └── grafana-dashboard.json    # Grafana dashboard
+└── .github/workflows/            # CI/CD Pipelines
+    ├── ci-cd-complete.yml        # Complete CI/CD pipeline
+    ├── test.yml                  # Testing workflow
+    ├── deploy-dev.yaml           # Development deployment
+    ├── deploy.stag.yaml          # Staging deployment
+    ├── deploy-prod.yaml          # Production deployment
+    └── drift-detection.yml        # Infrastructure monitoring
 ```
+
+## 💰 Cost Optimization
+
+This setup is optimized for **AWS Free Tier** and minimal costs:
+
+### **Free Tier Resources**
+- **EC2 Instances**: t3.micro (750 hours/month free)
+- **EBS Storage**: 30GB free per month
+- **Data Transfer**: 1GB free per month
+- **S3 Storage**: 5GB free per month
+
+### **Estimated Monthly Costs**
+- **Development**: ~$94.50/month (EKS control plane + minimal resources)
+- **Staging**: ~$124.50/month
+- **Production**: ~$124.50/month
+
+> **Note**: EKS control plane costs ~$73/month regardless of usage. Consider alternatives like AWS App Runner or single EC2 instance for ultra-low-cost deployments.
+
+### **Cost Optimization Strategies**
+1. **Single EKS cluster** with multiple namespaces
+2. **Spot instances** for non-critical workloads
+3. **Reserved instances** for predictable workloads
+4. **Alternative architectures** (App Runner, Lambda, single EC2)
+
+See [COST_OPTIMIZATION.md](COST_OPTIMIZATION.md) for detailed cost analysis and optimization strategies.
 
 ## Installation
 
