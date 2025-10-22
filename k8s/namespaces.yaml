@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hayy-dev
+  labels:
+    name: hayy-dev
+    environment: development
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hayy-staging
+  labels:
+    name: hayy-staging
+    environment: staging
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: hayy-prod
+  labels:
+    name: hayy-prod
+    environment: production

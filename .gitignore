@@ -1,0 +1,3 @@
+k8s/prod-secrets.yaml
+k8s/staging-secrets.yaml
+k8s/dev-secrets.yaml

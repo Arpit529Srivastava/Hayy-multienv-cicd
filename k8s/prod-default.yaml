@@ -1,0 +1,43 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hayy-api-prod
+  namespace: default
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: hayy-api-prod
+  template:
+    metadata:
+      labels:
+        app: hayy-api-prod
+    spec:
+      containers:
+      - name: api
+        image: ghcr.io/arpit529srivastava/hayy-ai-backend-prod:production
+        ports:
+        - containerPort: 8000
+        env:
+        - name: NODE_ENV
+          valueFrom:
+            secretKeyRef:
+              name: hayy-api-prod-secrets
+              key: NODE_ENV
+        - name: PORT
+          valueFrom:
+            secretKeyRef:
+              name: hayy-api-prod-secrets
+              key: PORT
+        - name: MONGODB_URI
+          valueFrom:
+            secretKeyRef:
+              name: hayy-api-prod-secrets
+              key: MONGODB_URI
+      nodeSelector:
+        eks.amazonaws.com/compute-type: fargate
+      tolerations:
+      - key: eks.amazonaws.com/compute-type
+        operator: Equal
+        value: fargate
+        effect: NoSchedule
