@@ -11,7 +11,7 @@ class Database {
   async connect() {
     try {
       const mongoUri =
-        process.env.MONGODB_URI || 'mongodb://localhost:27017/hayy-tasks';
+        process.env.MONGODB_URI;
 
       const options = {
         maxPoolSize: 10,
