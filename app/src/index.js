@@ -20,18 +20,22 @@ const app = express();
 app.set('trust proxy', 1);
 
 // Security middleware
-app.use(helmet({
-  contentSecurityPolicy: false, // Disable CSP for API
-  crossOriginEmbedderPolicy: false
-}));
+app.use(
+  helmet({
+    contentSecurityPolicy: false, // Disable CSP for API
+    crossOriginEmbedderPolicy: false
+  })
+);
 
 // CORS configuration
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || '*',
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CORS_ORIGIN || '*',
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+  })
+);
 
 // Rate limiting
 const limiter = rateLimit({
@@ -42,7 +46,7 @@ const limiter = rateLimit({
     message: 'Too many requests from this IP, please try again later.'
   },
   standardHeaders: true,
-  legacyHeaders: false,
+  legacyHeaders: false
 });
 
 app.use(limiter);
@@ -54,7 +58,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now();
-  
+
   res.on('finish', () => {
     const duration = Date.now() - start;
     logger.info(`${req.method} ${req.originalUrl}`, {
@@ -66,7 +70,7 @@ app.use((req, res, next) => {
       ip: req.ip
     });
   });
-  
+
   next();
 });
 
@@ -81,18 +85,18 @@ app.use(notFound);
 app.use(errorHandler);
 
 // Graceful shutdown handling
-const gracefulShutdown = async (signal) => {
+const gracefulShutdown = async signal => {
   logger.info(`Received ${signal}. Starting graceful shutdown...`);
-  
+
   // Stop accepting new requests
-  server.close(async () => {
+  global.server.close(async () => {
     logger.info('HTTP server closed');
-    
+
     try {
       // Close database connection
       await database.disconnect();
       logger.info('Database connection closed');
-      
+
       logger.info('Graceful shutdown completed');
       process.exit(0);
     } catch (error) {
@@ -100,10 +104,12 @@ const gracefulShutdown = async (signal) => {
       process.exit(1);
     }
   });
-  
+
   // Force close after 30 seconds
   setTimeout(() => {
-    logger.error('Could not close connections in time, forcefully shutting down');
+    logger.error(
+      'Could not close connections in time, forcefully shutting down'
+    );
     process.exit(1);
   }, 30000);
 };
@@ -113,7 +119,7 @@ process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
 process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   logger.error('Uncaught Exception:', error);
   process.exit(1);
 });
@@ -131,7 +137,7 @@ const startServer = async () => {
   try {
     // Connect to database
     await database.connect();
-    
+
     // Start HTTP server
     const server = app.listen(PORT, () => {
       logger.info(`🚀 Hayy Task Manager API server running on port ${PORT}`, {
@@ -144,7 +150,6 @@ const startServer = async () => {
 
     // Store server reference for graceful shutdown
     global.server = server;
-    
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);

@@ -10,27 +10,28 @@ class Database {
 
   async connect() {
     try {
-      const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/hayy-tasks';
-      
+      const mongoUri =
+        process.env.MONGODB_URI || 'mongodb://localhost:27017/hayy-tasks';
+
       const options = {
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
+        socketTimeoutMS: 45000
         // Removed deprecated options that cause connection issues
       };
 
       await mongoose.connect(mongoUri, options);
-      
+
       this.isConnected = true;
       this.connectionRetries = 0;
-      
+
       logger.info('Successfully connected to MongoDB', {
         uri: mongoUri.replace(/\/\/.*@/, '//***:***@'), // Hide credentials in logs
         environment: process.env.NODE_ENV || 'development'
       });
 
       // Handle connection events
-      mongoose.connection.on('error', (error) => {
+      mongoose.connection.on('error', error => {
         logger.error('MongoDB connection error:', error);
         this.isConnected = false;
       });
@@ -44,13 +45,15 @@ class Database {
         logger.info('MongoDB reconnected');
         this.isConnected = true;
       });
-
     } catch (error) {
       this.connectionRetries++;
-      logger.error(`Failed to connect to MongoDB (attempt ${this.connectionRetries}/${this.maxRetries}):`, error);
-      
+      logger.error(
+        `Failed to connect to MongoDB (attempt ${this.connectionRetries}/${this.maxRetries}):`,
+        error
+      );
+
       if (this.connectionRetries < this.maxRetries) {
-        logger.info(`Retrying connection in 5 seconds...`);
+        logger.info('Retrying connection in 5 seconds...');
         setTimeout(() => this.connect(), 5000);
       } else {
         logger.error('Max connection retries reached. Exiting application.');
