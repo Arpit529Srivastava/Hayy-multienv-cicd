@@ -27,7 +27,7 @@ router.get('/', (req, res) => {
 router.get('/health', (req, res) => {
   const uptime = process.uptime();
   const memoryUsage = process.memoryUsage();
-  
+
   const healthData = {
     status: 'healthy',
     timestamp: new Date().toISOString(),
@@ -57,36 +57,39 @@ router.get('/health', (req, res) => {
 // @desc    Readiness probe endpoint
 // @route   GET /ready
 // @access  Public
-router.get('/ready', asyncHandler(async (req, res) => {
-  const isDbHealthy = database.isHealthy();
-  const dbConnectionState = database.getConnectionState();
-  
-  const readinessData = {
-    status: isDbHealthy ? 'ready' : 'not ready',
-    timestamp: new Date().toISOString(),
-    checks: {
-      database: {
-        status: isDbHealthy ? 'healthy' : 'unhealthy',
-        connectionState: dbConnectionState
-      }
-    },
-    environment: process.env.NODE_ENV || 'development'
-  };
+router.get(
+  '/ready',
+  asyncHandler(async (req, res) => {
+    const isDbHealthy = database.isHealthy();
+    const dbConnectionState = database.getConnectionState();
 
-  if (isDbHealthy) {
-    logger.info('Readiness check passed', { dbState: dbConnectionState });
-    res.status(200).json({
-      status: 'success',
-      data: readinessData
-    });
-  } else {
-    logger.warn('Readiness check failed', { dbState: dbConnectionState });
-    res.status(503).json({
-      status: 'error',
-      data: readinessData
-    });
-  }
-}));
+    const readinessData = {
+      status: isDbHealthy ? 'ready' : 'not ready',
+      timestamp: new Date().toISOString(),
+      checks: {
+        database: {
+          status: isDbHealthy ? 'healthy' : 'unhealthy',
+          connectionState: dbConnectionState
+        }
+      },
+      environment: process.env.NODE_ENV || 'development'
+    };
+
+    if (isDbHealthy) {
+      logger.info('Readiness check passed', { dbState: dbConnectionState });
+      res.status(200).json({
+        status: 'success',
+        data: readinessData
+      });
+    } else {
+      logger.warn('Readiness check failed', { dbState: dbConnectionState });
+      res.status(503).json({
+        status: 'error',
+        data: readinessData
+      });
+    }
+  })
+);
 
 // @desc    Environment and version information
 // @route   GET /info

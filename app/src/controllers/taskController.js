@@ -7,7 +7,7 @@ const logger = require('../middleware/logger');
 // @access  Public
 const getTasks = asyncHandler(async (req, res) => {
   const { status, priority, page = 1, limit = 10 } = req.query;
-  
+
   // Build filter object
   const filter = {};
   if (status) filter.status = status;
@@ -15,7 +15,7 @@ const getTasks = asyncHandler(async (req, res) => {
 
   // Calculate pagination
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
+
   // Execute query with pagination
   const tasks = await Task.find(filter)
     .sort({ createdAt: -1 })
@@ -24,7 +24,7 @@ const getTasks = asyncHandler(async (req, res) => {
 
   // Get total count for pagination info
   const total = await Task.countDocuments(filter);
-  
+
   logger.info(`Retrieved ${tasks.length} tasks`, {
     filter,
     page: parseInt(page),
@@ -108,16 +108,13 @@ const updateTask = asyncHandler(async (req, res) => {
   if (description !== undefined) updateData.description = description;
   if (status !== undefined) updateData.status = status;
   if (priority !== undefined) updateData.priority = priority;
-  if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+  if (dueDate !== undefined)
+    updateData.dueDate = dueDate ? new Date(dueDate) : null;
 
-  const task = await Task.findByIdAndUpdate(
-    req.params.id,
-    updateData,
-    {
-      new: true,
-      runValidators: true
-    }
-  );
+  const task = await Task.findByIdAndUpdate(req.params.id, updateData, {
+    new: true,
+    runValidators: true
+  });
 
   if (!task) {
     throw new AppError('No task found with that ID', 404);
@@ -176,9 +173,9 @@ const getTaskStats = asyncHandler(async (req, res) => {
 // @access  Public
 const getOverdueTasks = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
-  
+
   const skip = (parseInt(page) - 1) * parseInt(limit);
-  
+
   const tasks = await Task.find({
     dueDate: { $lt: new Date() },
     status: { $ne: 'completed' }
