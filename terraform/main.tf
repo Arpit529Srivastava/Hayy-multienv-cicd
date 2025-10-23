@@ -18,16 +18,15 @@ resource "aws_vpc" "hayy_vpc" {
   }
 }
 
-# Internet Gateway
-resource "aws_internet_gateway" "hayy_igw" {
-  vpc_id = aws_vpc.hayy_vpc.id
-
-  tags = {
-    Name        = "${var.project_name}-igw"
-    Environment = var.environment
-    Project     = var.project_name
-  }
-}
+# Internet Gateway - Not needed for eksctl setup
+# resource "aws_internet_gateway" "hayy_igw" {
+#   vpc_id = aws_vpc.hayy_vpc.id
+#   tags = {
+#     Name        = "${var.project_name}-igw"
+#     Environment = var.environment
+#     Project     = var.project_name
+#   }
+# }
 
 # Public Subnets
 resource "aws_subnet" "public" {
@@ -64,83 +63,70 @@ resource "aws_subnet" "private" {
   }
 }
 
-# NAT Gateways
-resource "aws_eip" "nat" {
-  count = length(var.availability_zones)
+# NAT Gateways - Not needed for eksctl setup
+# resource "aws_eip" "nat" {
+#   count = length(var.availability_zones)
+#   domain = "vpc"
+#   tags = {
+#     Name        = "${var.project_name}-nat-eip-${count.index + 1}"
+#     Environment = var.environment
+#     Project     = var.project_name
+#   }
+#   depends_on = [aws_internet_gateway.hayy_igw]
+# }
 
-  domain = "vpc"
+# resource "aws_nat_gateway" "nat" {
+#   count = length(var.availability_zones)
+#   allocation_id = aws_eip.nat[count.index].id
+#   subnet_id     = aws_subnet.public[count.index].id
+#   tags = {
+#     Name        = "${var.project_name}-nat-${count.index + 1}"
+#     Environment = var.environment
+#     Project     = var.project_name
+#   }
+#   depends_on = [aws_internet_gateway.hayy_igw]
+# }
 
-  tags = {
-    Name        = "${var.project_name}-nat-eip-${count.index + 1}"
-    Environment = var.environment
-    Project     = var.project_name
-  }
+# Route Tables - Not needed for eksctl setup
+# resource "aws_route_table" "public" {
+#   vpc_id = aws_vpc.hayy_vpc.id
+#   route {
+#     cidr_block = "0.0.0.0/0"
+#     gateway_id = aws_internet_gateway.hayy_igw.id
+#   }
+#   tags = {
+#     Name        = "${var.project_name}-public-rt"
+#     Environment = var.environment
+#     Project     = var.project_name
+#   }
+# }
 
-  depends_on = [aws_internet_gateway.hayy_igw]
-}
+# resource "aws_route_table" "private" {
+#   count = length(var.availability_zones)
+#   vpc_id = aws_vpc.hayy_vpc.id
+#   route {
+#     cidr_block     = "0.0.0.0/0"
+#     nat_gateway_id = aws_nat_gateway.nat[count.index].id
+#   }
+#   tags = {
+#     Name        = "${var.project_name}-private-rt-${count.index + 1}"
+#     Environment = var.environment
+#     Project     = var.project_name
+#   }
+# }
 
-resource "aws_nat_gateway" "nat" {
-  count = length(var.availability_zones)
+# Route Table Associations - Not needed for eksctl setup
+# resource "aws_route_table_association" "public" {
+#   count = length(var.availability_zones)
+#   subnet_id      = aws_subnet.public[count.index].id
+#   route_table_id = aws_route_table.public.id
+# }
 
-  allocation_id = aws_eip.nat[count.index].id
-  subnet_id     = aws_subnet.public[count.index].id
-
-  tags = {
-    Name        = "${var.project_name}-nat-${count.index + 1}"
-    Environment = var.environment
-    Project     = var.project_name
-  }
-
-  depends_on = [aws_internet_gateway.hayy_igw]
-}
-
-# Route Tables
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.hayy_vpc.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.hayy_igw.id
-  }
-
-  tags = {
-    Name        = "${var.project_name}-public-rt"
-    Environment = var.environment
-    Project     = var.project_name
-  }
-}
-
-resource "aws_route_table" "private" {
-  count = length(var.availability_zones)
-
-  vpc_id = aws_vpc.hayy_vpc.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat[count.index].id
-  }
-
-  tags = {
-    Name        = "${var.project_name}-private-rt-${count.index + 1}"
-    Environment = var.environment
-    Project     = var.project_name
-  }
-}
-
-# Route Table Associations
-resource "aws_route_table_association" "public" {
-  count = length(var.availability_zones)
-
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table_association" "private" {
-  count = length(var.availability_zones)
-
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[count.index].id
-}
+# resource "aws_route_table_association" "private" {
+#   count = length(var.availability_zones)
+#   subnet_id      = aws_subnet.private[count.index].id
+#   route_table_id = aws_route_table.private[count.index].id
+# }
 
 # Security Groups
 resource "aws_security_group" "eks_cluster" {
