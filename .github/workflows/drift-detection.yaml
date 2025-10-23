@@ -43,6 +43,27 @@ jobs:
         run: terraform init
         working-directory: terraform
       
+      - name: Import Existing Resources
+        run: |
+          # Import existing EKS cluster and related resources
+          terraform import aws_vpc.hayy_vpc vpc-0257f2aadc5ebd564
+          terraform import aws_subnet.public[0] subnet-05aa5bf1e2d40cb41
+          terraform import aws_subnet.public[1] subnet-0778c80422d13de89
+          terraform import aws_subnet.private[0] subnet-0c85517cbfcc358e9
+          terraform import aws_subnet.private[1] subnet-0d08840a3550b86b2
+          terraform import aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9
+          terraform import aws_security_group.eks_nodes sg-0ece80f7f12f0a9d9
+          terraform import aws_eks_cluster.hayy_cluster hayy-ai-cluster
+          terraform import aws_iam_role.eks_cluster hayy-ai-cluster-cluster-role
+          terraform import aws_iam_role.eks_fargate hayy-ai-cluster-fargate-role
+          terraform import aws_iam_role_policy_attachment.eks_cluster_policy hayy-ai-cluster-cluster-role/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+          terraform import aws_iam_role_policy_attachment.eks_fargate_policy hayy-ai-cluster-fargate-role/arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
+          terraform import aws_cloudwatch_log_group.eks_cluster /aws/eks/hayy-ai-cluster/cluster
+          terraform import aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging
+          terraform import aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod
+        working-directory: terraform
+        continue-on-error: true
+      
       - name: Check Drift
         id: drift-check
         run: |
@@ -116,6 +137,27 @@ jobs:
       - name: Terraform Init
         run: terraform init
         working-directory: terraform
+      
+      - name: Import Existing Resources
+        run: |
+          # Import existing EKS cluster and related resources
+          terraform import aws_vpc.hayy_vpc vpc-0257f2aadc5ebd564
+          terraform import aws_subnet.public[0] subnet-05aa5bf1e2d40cb41
+          terraform import aws_subnet.public[1] subnet-0778c80422d13de89
+          terraform import aws_subnet.private[0] subnet-0c85517cbfcc358e9
+          terraform import aws_subnet.private[1] subnet-0d08840a3550b86b2
+          terraform import aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9
+          terraform import aws_security_group.eks_nodes sg-0ece80f7f12f0a9d9
+          terraform import aws_eks_cluster.hayy_cluster hayy-ai-cluster
+          terraform import aws_iam_role.eks_cluster hayy-ai-cluster-cluster-role
+          terraform import aws_iam_role.eks_fargate hayy-ai-cluster-fargate-role
+          terraform import aws_iam_role_policy_attachment.eks_cluster_policy hayy-ai-cluster-cluster-role/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
+          terraform import aws_iam_role_policy_attachment.eks_fargate_policy hayy-ai-cluster-fargate-role/arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
+          terraform import aws_cloudwatch_log_group.eks_cluster /aws/eks/hayy-ai-cluster/cluster
+          terraform import aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging
+          terraform import aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod
+        working-directory: terraform
+        continue-on-error: true
       
       - name: Check Drift
         id: drift-check
