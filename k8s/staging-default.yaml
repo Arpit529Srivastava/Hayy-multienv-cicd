@@ -2,9 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hayy-api-staging
-  namespace: default
+  namespace: hayy-staging
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: hayy-api-staging
@@ -15,9 +15,32 @@ spec:
     spec:
       containers:
       - name: api
-        image: ghcr.io/arpit529srivastava/hayy-ai-backend-stag:staging
+        image: ghcr.io/arpit529srivastava/hayy-ai-backend-stag:staging-fixed
         ports:
         - containerPort: 8000
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8000
+          initialDelaySeconds: 60  # Increased delay
+          periodSeconds: 30        # Increased interval
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 30
+          periodSeconds: 15        # Increased interval
+          timeoutSeconds: 10
+          failureThreshold: 3
         env:
         - name: NODE_ENV
           valueFrom:
@@ -34,3 +57,12 @@ spec:
             secretKeyRef:
               name: hayy-api-staging-secrets
               key: MONGODB_URI
+        - name: RATE_LIMIT_MAX
+          value: "1000"  # Increase rate limit for health checks
+      nodeSelector:
+        eks.amazonaws.com/compute-type: fargate
+      tolerations:
+      - key: eks.amazonaws.com/compute-type
+        operator: Equal
+        value: fargate
+        effect: NoSchedule
