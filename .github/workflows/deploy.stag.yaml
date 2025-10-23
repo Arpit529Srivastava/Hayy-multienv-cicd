@@ -1,4 +1,4 @@
-name: Deploy to Staging
+name: Deploy to Staging (Kubernetes)
 
 on:
   push:
@@ -10,10 +10,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Deploy to Staging-Docker
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Build and push Docker image
         run: |
           docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.GH_PAT }} ghcr.io
-          docker build -f app/Dockerfile.staging -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-stag:staging ./app
+          docker build --platform linux/amd64 -f app/Dockerfile -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-stag:staging ./app
           docker push ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-stag:staging
+
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region us-east-1 --name hayy-ai-cluster
+
+      - name: Deploy to Kubernetes
+        run: |
+          # Update the image in the deployment
+          kubectl set image deployment/hayy-api-staging api=ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend-stag:staging -n hayy-staging
+          
+          # Wait for rollout to complete
+          kubectl rollout status deployment/hayy-api-staging -n hayy-staging --timeout=300s
+          
+          # Verify deployment
+          kubectl get pods -n hayy-staging
+          kubectl get services -n hayy-staging
+
+      - name: Health Check
+        run: |
+          # Wait for pod to be ready
+          kubectl wait --for=condition=ready pod -l app=hayy-api-staging -n hayy-staging --timeout=300s
+          
+          # Port forward and test
+          kubectl port-forward -n hayy-staging service/hayy-api-staging-service 8080:80 &
+          sleep 10
+          curl -f http://localhost:8080/health || exit 1
+          pkill -f "kubectl port-forward"
