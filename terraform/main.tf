@@ -182,7 +182,7 @@ resource "aws_security_group" "eks_nodes" {
 # EKS Cluster
 resource "aws_eks_cluster" "hayy_cluster" {
   name     = var.cluster_name
-  role_arn = aws_iam_role.eks_cluster.arn
+  role_arn = "arn:aws:iam::825765395867:role/eksctl-hayy-ai-cluster-cluster-ServiceRole-n3ut4fB0j27F"
   version  = var.kubernetes_version
 
   vpc_config {
@@ -194,7 +194,6 @@ resource "aws_eks_cluster" "hayy_cluster" {
   }
 
   depends_on = [
-    aws_iam_role_policy_attachment.eks_cluster_policy,
     aws_cloudwatch_log_group.eks_cluster,
   ]
 
@@ -221,7 +220,7 @@ resource "aws_cloudwatch_log_group" "eks_cluster" {
 resource "aws_eks_fargate_profile" "staging" {
   cluster_name           = aws_eks_cluster.hayy_cluster.name
   fargate_profile_name   = "hayy-staging"
-  pod_execution_role_arn = aws_iam_role.eks_fargate.arn
+  pod_execution_role_arn = "arn:aws:iam::825765395867:role/eksctl-hayy-ai-cluster-clus-FargatePodExecutionRole-0nMFFXo3eO8n"
   subnet_ids             = aws_subnet.private[*].id
 
   selector {
@@ -238,7 +237,7 @@ resource "aws_eks_fargate_profile" "staging" {
 resource "aws_eks_fargate_profile" "production" {
   cluster_name           = aws_eks_cluster.hayy_cluster.name
   fargate_profile_name   = "hayy-prod"
-  pod_execution_role_arn = aws_iam_role.eks_fargate.arn
+  pod_execution_role_arn = "arn:aws:iam::825765395867:role/eksctl-hayy-ai-cluster-clus-FargatePodExecutionRole-0nMFFXo3eO8n"
   subnet_ids             = aws_subnet.private[*].id
 
   selector {
@@ -252,59 +251,59 @@ resource "aws_eks_fargate_profile" "production" {
   }
 }
 
-# IAM Roles
-resource "aws_iam_role" "eks_cluster" {
-  name = "${var.cluster_name}-cluster-role"
-
-  assume_role_policy = jsonencode({
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "eks.amazonaws.com"
-      }
-    }]
-    Version = "2012-10-17"
-  })
-
-  tags = {
-    Name        = "${var.cluster_name}-cluster-role"
-    Environment = var.environment
-    Project     = var.project_name
-  }
-}
-
-resource "aws_iam_role" "eks_fargate" {
-  name = "${var.cluster_name}-fargate-role"
-
-  assume_role_policy = jsonencode({
-    Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
-      Principal = {
-        Service = "eks-fargate-pods.amazonaws.com"
-      }
-    }]
-    Version = "2012-10-17"
-  })
-
-  tags = {
-    Name        = "${var.cluster_name}-fargate-role"
-    Environment = var.environment
-    Project     = var.project_name
-  }
-}
-
-# IAM Role Policy Attachments
-resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role       = aws_iam_role.eks_cluster.name
-}
-
-resource "aws_iam_role_policy_attachment" "eks_fargate_policy" {
-  policy_arn = "arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
-  role       = aws_iam_role.eks_fargate.name
-}
+# IAM Roles - Commented out due to permission issues
+# resource "aws_iam_role" "eks_cluster" {
+#   name = "${var.cluster_name}-cluster-role"
+# 
+#   assume_role_policy = jsonencode({
+#     Statement = [{
+#       Action = "sts:AssumeRole"
+#       Effect = "Allow"
+#       Principal = {
+#         Service = "eks.amazonaws.com"
+#       }
+#     }]
+#     Version = "2012-10-17"
+#   })
+# 
+#   tags = {
+#     Name        = "${var.cluster_name}-cluster-role"
+#     Environment = var.environment
+#     Project     = var.project_name
+#   }
+# }
+# 
+# resource "aws_iam_role" "eks_fargate" {
+#   name = "${var.cluster_name}-fargate-role"
+# 
+#   assume_role_policy = jsonencode({
+#     Statement = [{
+#       Action = "sts:AssumeRole"
+#       Effect = "Allow"
+#       Principal = {
+#         Service = "eks-fargate-pods.amazonaws.com"
+#       }
+#     }]
+#     Version = "2012-10-17"
+#   })
+# 
+#   tags = {
+#     Name        = "${var.cluster_name}-fargate-role"
+#     Environment = var.environment
+#     Project     = var.project_name
+#   }
+# }
+# 
+# # IAM Role Policy Attachments
+# resource "aws_iam_role_policy_attachment" "eks_cluster_policy" {
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
+#   role       = aws_iam_role.eks_cluster.name
+# }
+# 
+# resource "aws_iam_role_policy_attachment" "eks_fargate_policy" {
+#   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy"
+#   role       = aws_iam_role.eks_fargate.name
+# }
 
 # OIDC Provider
 data "tls_certificate" "eks" {

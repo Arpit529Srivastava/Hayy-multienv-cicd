@@ -54,10 +54,6 @@ jobs:
           terraform import -var="environment=production" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9
           terraform import -var="environment=production" aws_security_group.eks_nodes sg-0ece80f7f12f0a9d9
           terraform import -var="environment=production" aws_eks_cluster.hayy_cluster hayy-ai-cluster
-          terraform import -var="environment=production" aws_iam_role.eks_cluster eksctl-hayy-ai-cluster-cluster-ServiceRole-n3ut4fB0j27F
-          terraform import -var="environment=production" aws_iam_role.eks_fargate eksctl-hayy-ai-cluster-clus-FargatePodExecutionRole-0nMFFXo3eO8n
-          terraform import -var="environment=production" aws_iam_role_policy_attachment.eks_cluster_policy eksctl-hayy-ai-cluster-cluster-ServiceRole-n3ut4fB0j27F/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-          terraform import -var="environment=production" aws_iam_role_policy_attachment.eks_fargate_policy eksctl-hayy-ai-cluster-clus-FargatePodExecutionRole-0nMFFXo3eO8n/arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
           terraform import -var="environment=production" aws_cloudwatch_log_group.eks_cluster /aws/eks/hayy-ai-cluster/cluster
           terraform import -var="environment=production" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging
           terraform import -var="environment=production" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod
@@ -160,10 +156,6 @@ jobs:
           terraform import -var="environment=staging" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9
           terraform import -var="environment=staging" aws_security_group.eks_nodes sg-0ece80f7f12f0a9d9
           terraform import -var="environment=staging" aws_eks_cluster.hayy_cluster hayy-ai-cluster
-          terraform import -var="environment=staging" aws_iam_role.eks_cluster eksctl-hayy-ai-cluster-cluster-ServiceRole-n3ut4fB0j27F
-          terraform import -var="environment=staging" aws_iam_role.eks_fargate eksctl-hayy-ai-cluster-clus-FargatePodExecutionRole-0nMFFXo3eO8n
-          terraform import -var="environment=staging" aws_iam_role_policy_attachment.eks_cluster_policy eksctl-hayy-ai-cluster-cluster-ServiceRole-n3ut4fB0j27F/arn:aws:iam::aws:policy/AmazonEKSClusterPolicy
-          terraform import -var="environment=staging" aws_iam_role_policy_attachment.eks_fargate_policy eksctl-hayy-ai-cluster-clus-FargatePodExecutionRole-0nMFFXo3eO8n/arn:aws:iam::aws:policy/AmazonEKSFargatePodExecutionRolePolicy
           terraform import -var="environment=staging" aws_cloudwatch_log_group.eks_cluster /aws/eks/hayy-ai-cluster/cluster
           terraform import -var="environment=staging" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging
           terraform import -var="environment=staging" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod
