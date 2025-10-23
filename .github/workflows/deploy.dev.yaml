@@ -1,4 +1,4 @@
-name: Deploy to Dev
+name: Deploy to Dev (Docker Only)
 
 on:
   push:
@@ -10,10 +10,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Deploy to Dev-Docker
+      - name: Build and push Docker image
         run: |
           docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.GH_PAT }} ghcr.io
-          docker build -f app/Dockerfile -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend:latest ./app
+          docker build --platform linux/amd64 -f app/Dockerfile -t ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend:latest ./app
           docker push ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend:latest
+
+      - name: Notify Dev Build Success
+        run: |
+          echo "✅ Dev Docker image built and pushed successfully!"
+          echo "Image: ghcr.io/${{ secrets.DOCKER_USERNAME }}/hayy-ai-backend:latest"
+          echo "Note: Dev environment runs locally with Docker, not on Kubernetes"
