@@ -139,7 +139,7 @@ const startServer = async () => {
     await database.connect();
 
     // Start HTTP server
-    const server = app.listen(PORT, () => {
+    const server = app.listen(PORT, '0.0.0.0', () => {  // Bind to 0.0.0.0
       logger.info(`🚀 Hayy Task Manager API server running on port ${PORT}`, {
         port: PORT,
         environment: process.env.NODE_ENV || 'development',
