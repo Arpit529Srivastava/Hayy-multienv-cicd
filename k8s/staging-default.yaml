@@ -34,10 +34,3 @@ spec:
             secretKeyRef:
               name: hayy-api-staging-secrets
               key: MONGODB_URI
-      nodeSelector:
-        eks.amazonaws.com/compute-type: fargate
-      tolerations:
-      - key: eks.amazonaws.com/compute-type
-        operator: Equal
-        value: fargate
-        effect: NoSchedule
