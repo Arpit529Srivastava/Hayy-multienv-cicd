@@ -46,22 +46,38 @@ jobs:
       - name: Check Drift
         id: drift-check
         run: |
+          # Run terraform plan and capture output
           terraform plan -detailed-exitcode -no-color -var-file="environments/staging.tfvars" > drift.txt 2>&1
           EXIT_CODE=$?
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           
+          # Handle different exit codes
           if [ $EXIT_CODE -eq 0 ]; then
             echo "drift=false" >> $GITHUB_OUTPUT
             echo "✅ No drift detected in staging"
           elif [ $EXIT_CODE -eq 2 ]; then
             echo "drift=true" >> $GITHUB_OUTPUT
             echo "⚠️ Drift detected in staging"
+            echo "Drift details:" >> drift.txt
+            echo "=================" >> drift.txt
+            terraform plan -no-color -var-file="environments/staging.tfvars" >> drift.txt 2>&1
           else
             echo "drift=error" >> $GITHUB_OUTPUT
-            echo "❌ Error checking staging drift"
+            echo "❌ Error checking staging drift (exit code: $EXIT_CODE)"
+            echo "Error details:" >> drift.txt
+            echo "==============" >> drift.txt
+            cat drift.txt
           fi
         working-directory: terraform
         continue-on-error: true
+      
+      - name: Upload Drift Details
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: staging-drift-details
+          path: terraform/drift.txt
+          retention-days: 7
       
       - name: Send Slack Alert - Staging
         if: steps.drift-check.outputs.drift == 'true'
@@ -104,22 +120,38 @@ jobs:
       - name: Check Drift
         id: drift-check
         run: |
+          # Run terraform plan and capture output
           terraform plan -detailed-exitcode -no-color -var-file="environments/production.tfvars" > drift.txt 2>&1
           EXIT_CODE=$?
           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           
+          # Handle different exit codes
           if [ $EXIT_CODE -eq 0 ]; then
             echo "drift=false" >> $GITHUB_OUTPUT
             echo "✅ No drift detected in production"
           elif [ $EXIT_CODE -eq 2 ]; then
             echo "drift=true" >> $GITHUB_OUTPUT
             echo "🚨 CRITICAL: Drift detected in production"
+            echo "Drift details:" >> drift.txt
+            echo "=================" >> drift.txt
+            terraform plan -no-color -var-file="environments/production.tfvars" >> drift.txt 2>&1
           else
             echo "drift=error" >> $GITHUB_OUTPUT
-            echo "❌ Error checking production drift"
+            echo "❌ Error checking production drift (exit code: $EXIT_CODE)"
+            echo "Error details:" >> drift.txt
+            echo "==============" >> drift.txt
+            cat drift.txt
           fi
         working-directory: terraform
         continue-on-error: true
+      
+      - name: Upload Drift Details
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: production-drift-details
+          path: terraform/drift.txt
+          retention-days: 7
       
       - name: Send Slack Alert - Production
         if: steps.drift-check.outputs.drift == 'true'
