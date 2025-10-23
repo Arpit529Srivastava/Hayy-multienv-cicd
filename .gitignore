@@ -1,3 +1,302 @@
-k8s/prod-secrets.yaml
-k8s/staging-secrets.yaml
-k8s/dev-secrets.yaml
+# Terraform sensitive files
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+!environments/*.tfvars
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate.d/
+crash.log
+crash.*.log
+*.tfplan
+*.tfplan.*
+
+# AWS credentials
+.aws/
+aws-credentials.json
+aws-config.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Kubernetes secrets
+k8s/secrets/
+k8s/*-secrets.yaml
+!k8s/*-secrets.yaml.example
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage
+.grunt
+
+# Bower dependency directory
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons
+build/Release
+
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup
+*.old
+
+# Certificate files
+*.pem
+*.key
+*.crt
+*.csr
+*.p12
+*.pfx
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Local development
+.local
+local.properties
+
+# IDE
+*.iml
+*.ipr
+*.iws
+
+# JetBrains
+.idea/
+
+# VS Code
+.vscode/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# Security sensitive files
+secrets/
+.secrets/
+*.secret
+*.private
+*.confidential
+*.sensitive
+
+# CI/CD sensitive files
+.github/secrets/
+.github/workflows/secrets/
+ci-secrets/
+cd-secrets/
+
+# Monitoring and logging
+monitoring/
+grafana/
+prometheus/
+alertmanager/
+
+# Backup and archive files
+backup/
+backups/
+archive/
+archives/
+*.tar.gz
+*.zip
+*.rar
+*.7z
+
+# Test files
+test-results/
+coverage/
+.nyc_output/
+junit.xml
+test-report.xml
+
+# Documentation build
+docs/_build/
+site/
+_site/
+
+# Package managers
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build artifacts
+build/
+dist/
+out/
+target/
+bin/
+obj/
+
+# Cache directories
+.cache/
+cache/
+.tmp/
+tmp/
+temp/
+
+# Local configuration
+local.config.js
+local.config.json
+config.local.js
+config.local.json
