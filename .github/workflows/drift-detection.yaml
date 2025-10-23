@@ -1,0 +1,135 @@
+name: Terraform Drift Detection
+
+on:
+  schedule:
+    # Staging: Every 4 hours
+    - cron: '0 */4 * * *'
+    # Production: Every 12 hours  
+    - cron: '0 */12 * * *'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to check'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+        - staging
+        - production
+
+jobs:
+  drift-check-staging:
+    if: github.event.schedule == '0 */4 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout stag branch
+        uses: actions/checkout@v4
+        with:
+          ref: stag
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+      
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+      
+      - name: Check Drift
+        id: drift-check
+        run: |
+          terraform plan -detailed-exitcode -no-color -var-file="environments/staging.tfvars" > drift.txt 2>&1
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "drift=false" >> $GITHUB_OUTPUT
+            echo "✅ No drift detected in staging"
+          elif [ $EXIT_CODE -eq 2 ]; then
+            echo "drift=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Drift detected in staging"
+          else
+            echo "drift=error" >> $GITHUB_OUTPUT
+            echo "❌ Error checking staging drift"
+          fi
+        working-directory: terraform
+        continue-on-error: true
+      
+      - name: Send Slack Alert - Staging
+        if: steps.drift-check.outputs.drift == 'true'
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: |
+            ⚠️ **Staging Drift Detected**
+            Changes found in staging infrastructure.
+            Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Check the logs for details.
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+
+  drift-check-production:
+    if: github.event.schedule == '0 */12 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout prod branch
+        uses: actions/checkout@v4
+        with:
+          ref: prod
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+      
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.5.0
+      
+      - name: Terraform Init
+        run: terraform init
+        working-directory: terraform
+      
+      - name: Check Drift
+        id: drift-check
+        run: |
+          terraform plan -detailed-exitcode -no-color -var-file="environments/production.tfvars" > drift.txt 2>&1
+          EXIT_CODE=$?
+          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+          
+          if [ $EXIT_CODE -eq 0 ]; then
+            echo "drift=false" >> $GITHUB_OUTPUT
+            echo "✅ No drift detected in production"
+          elif [ $EXIT_CODE -eq 2 ]; then
+            echo "drift=true" >> $GITHUB_OUTPUT
+            echo "🚨 CRITICAL: Drift detected in production"
+          else
+            echo "drift=error" >> $GITHUB_OUTPUT
+            echo "❌ Error checking production drift"
+          fi
+        working-directory: terraform
+        continue-on-error: true
+      
+      - name: Send Slack Alert - Production
+        if: steps.drift-check.outputs.drift == 'true'
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+          slack-message: |
+            🚨 **CRITICAL: Production Drift Detected**
+            Manual review required for production infrastructure.
+            Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+            Check the logs for details.
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
