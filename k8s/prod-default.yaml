@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
       - name: api
-        image: ghcr.io/arpit529srivastava/hayy-ai-backend-prod:production
+        image: ghcr.io/arpit529srivastava/hayy-ai-backend-prod:production-v2
         ports:
         - containerPort: 8000
         resources:
