@@ -94,7 +94,7 @@ jobs:
       
       - name: Upload Drift Details
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: staging-drift-details
           path: terraform/drift.txt
@@ -189,7 +189,7 @@ jobs:
       
       - name: Upload Drift Details
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: production-drift-details
           path: terraform/drift.txt
