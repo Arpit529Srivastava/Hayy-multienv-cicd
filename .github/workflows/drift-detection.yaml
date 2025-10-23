@@ -71,8 +71,13 @@ jobs:
           
           # Handle different exit codes
           if [ $EXIT_CODE -eq 0 ]; then
-            echo "drift=false" >> $GITHUB_OUTPUT
-            echo "✅ No drift detected in staging"
+            echo "drift=true" >> $GITHUB_OUTPUT
+            echo "⚠️ DEMO MODE: Simulating drift detection in staging"
+            echo "Demo drift details:" >> drift.txt
+            echo "=================" >> drift.txt
+            echo "This is a demo notification showing drift detection capabilities." >> drift.txt
+            echo "In real scenarios, this would show actual infrastructure changes." >> drift.txt
+            terraform plan -no-color -var="environment=staging" >> drift.txt 2>&1
           elif [ $EXIT_CODE -eq 2 ]; then
             echo "drift=true" >> $GITHUB_OUTPUT
             echo "⚠️ Drift detected in staging"
@@ -172,8 +177,13 @@ jobs:
           
           # Handle different exit codes
           if [ $EXIT_CODE -eq 0 ]; then
-            echo "drift=false" >> $GITHUB_OUTPUT
-            echo "✅ No drift detected in production"
+            echo "drift=true" >> $GITHUB_OUTPUT
+            echo "🚨 DEMO MODE: Simulating critical drift detection in production"
+            echo "Demo drift details:" >> drift.txt
+            echo "=================" >> drift.txt
+            echo "This is a demo notification showing critical production drift detection." >> drift.txt
+            echo "In real scenarios, this would show actual infrastructure changes requiring immediate attention." >> drift.txt
+            terraform plan -no-color -var="environment=production" >> drift.txt 2>&1
           elif [ $EXIT_CODE -eq 2 ]; then
             echo "drift=true" >> $GITHUB_OUTPUT
             echo "🚨 CRITICAL: Drift detected in production"
