@@ -46,17 +46,18 @@ jobs:
       - name: Import Existing Resources
         run: |
           # Import existing EKS cluster and related resources
-          terraform import -var="environment=production" aws_vpc.hayy_vpc vpc-0257f2aadc5ebd564
-          terraform import -var="environment=production" aws_subnet.public[0] subnet-05aa5bf1e2d40cb41
-          terraform import -var="environment=production" aws_subnet.public[1] subnet-0778c80422d13de89
-          terraform import -var="environment=production" aws_subnet.private[0] subnet-0c85517cbfcc358e9
-          terraform import -var="environment=production" aws_subnet.private[1] subnet-0d08840a3550b86b2
-          terraform import -var="environment=production" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9
-          terraform import -var="environment=production" aws_security_group.eks_nodes sg-0ece80f7f12f0a9d9
-          terraform import -var="environment=production" aws_eks_cluster.hayy_cluster hayy-ai-cluster
-          terraform import -var="environment=production" aws_cloudwatch_log_group.eks_cluster /aws/eks/hayy-ai-cluster/cluster
-          terraform import -var="environment=production" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging
-          terraform import -var="environment=production" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod
+          echo "Importing existing AWS resources..."
+          terraform import -var="environment=staging" aws_vpc.hayy_vpc vpc-0257f2aadc5ebd564 || echo "VPC already imported or not found"
+          terraform import -var="environment=staging" aws_subnet.public[0] subnet-05aa5bf1e2d40cb41 || echo "Public subnet 0 already imported or not found"
+          terraform import -var="environment=staging" aws_subnet.public[1] subnet-0778c80422d13de89 || echo "Public subnet 1 already imported or not found"
+          terraform import -var="environment=staging" aws_subnet.private[0] subnet-0c85517cbfcc358e9 || echo "Private subnet 0 already imported or not found"
+          terraform import -var="environment=staging" aws_subnet.private[1] subnet-0d08840a3550b86b2 || echo "Private subnet 1 already imported or not found"
+          terraform import -var="environment=staging" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9 || echo "EKS cluster security group already imported or not found"
+          terraform import -var="environment=staging" aws_security_group.eks_nodes sg-02b83d9ca13a87ea9 || echo "EKS nodes security group already imported or not found"
+          terraform import -var="environment=staging" aws_eks_cluster.hayy_cluster hayy-ai-cluster || echo "EKS cluster already imported or not found"
+          terraform import -var="environment=staging" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging || echo "Staging Fargate profile already imported or not found"
+          terraform import -var="environment=staging" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod || echo "Production Fargate profile already imported or not found"
+          echo "Import process completed"
         working-directory: terraform
         continue-on-error: true
       
@@ -108,7 +109,7 @@ jobs:
           retention-days: 7
       
       - name: Send Slack Alert - Staging
-        if: steps.drift-check.outputs.drift == 'true'
+        if: steps.drift-check.outputs.drift == 'true' || steps.drift-check.outputs.drift == 'error'
         uses: slackapi/slack-github-action@v1.24.0
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
@@ -156,7 +157,6 @@ jobs:
           terraform import -var="environment=staging" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9
           terraform import -var="environment=staging" aws_security_group.eks_nodes sg-0ece80f7f12f0a9d9
           terraform import -var="environment=staging" aws_eks_cluster.hayy_cluster hayy-ai-cluster
-          terraform import -var="environment=staging" aws_cloudwatch_log_group.eks_cluster /aws/eks/hayy-ai-cluster/cluster
           terraform import -var="environment=staging" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging
           terraform import -var="environment=staging" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod
         working-directory: terraform
@@ -210,7 +210,7 @@ jobs:
           retention-days: 7
       
       - name: Send Slack Alert - Production
-        if: steps.drift-check.outputs.drift == 'true'
+        if: steps.drift-check.outputs.drift == 'true' || steps.drift-check.outputs.drift == 'error'
         uses: slackapi/slack-github-action@v1.24.0
         with:
           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
