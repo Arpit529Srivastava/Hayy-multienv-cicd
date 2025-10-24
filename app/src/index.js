@@ -9,6 +9,13 @@ const rateLimit = require('express-rate-limit');
 const database = require('./config/database');
 const logger = require('./middleware/logger');
 const { errorHandler, notFound } = require('./middleware/errorHandler');
+const { 
+  metricsMiddleware, 
+  updateTaskMetrics, 
+  updateSystemMetrics, 
+  updateDatabaseMetrics,
+  metricsHandler 
+} = require('./middleware/metrics');
 
 // Import routes
 const healthRoutes = require('./routes/health');
@@ -51,6 +58,9 @@ const limiter = rateLimit({
 
 app.use(limiter);
 
+// Metrics middleware (should be early in the middleware stack)
+app.use(metricsMiddleware);
+
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -77,6 +87,9 @@ app.use((req, res, next) => {
 // Routes
 app.use('/', healthRoutes);
 app.use('/api/tasks', taskRoutes);
+
+// Metrics endpoint
+app.get('/metrics', metricsHandler);
 
 // 404 handler
 app.use(notFound);
@@ -150,10 +163,31 @@ const startServer = async () => {
 
     // Store server reference for graceful shutdown
     global.server = server;
+
+    // Start metrics collection
+    startMetricsCollection();
   } catch (error) {
     logger.error('Failed to start server:', error);
     process.exit(1);
   }
+};
+
+// Start metrics collection
+const startMetricsCollection = () => {
+  const Task = require('./models/Task');
+  
+  // Update metrics every 30 seconds
+  setInterval(async () => {
+    try {
+      await updateTaskMetrics(Task);
+      updateSystemMetrics();
+      updateDatabaseMetrics(database.getConnectionState());
+    } catch (error) {
+      logger.error('Failed to update metrics:', error);
+    }
+  }, 30000);
+
+  logger.info('Metrics collection started');
 };
 
 // Start the application
