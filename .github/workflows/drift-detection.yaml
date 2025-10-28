@@ -1,233 +1,233 @@
-name: Terraform Drift Detection
+# name: Terraform Drift Detection
 
-on:
-  schedule:
-    # Staging: Every 4 hours
-    - cron: '0 */4 * * *'
-    # Production: Every 12 hours  
-    - cron: '0 */12 * * *'
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to check'
-        required: true
-        default: 'staging'
-        type: choice
-        options:
-        - staging
-        - production
+# on:
+#   schedule:
+#     # Staging: Every 4 hours
+#     - cron: '0 */4 * * *'
+#     # Production: Every 12 hours  
+#     - cron: '0 */12 * * *'
+#   workflow_dispatch:
+#     inputs:
+#       environment:
+#         description: 'Environment to check'
+#         required: true
+#         default: 'staging'
+#         type: choice
+#         options:
+#         - staging
+#         - production
 
-jobs:
-  drift-check-staging:
-    if: github.event.schedule == '0 */4 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout stag branch
-        uses: actions/checkout@v4
-        with:
-          ref: stag
+# jobs:
+#   drift-check-staging:
+#     if: github.event.schedule == '0 */4 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'staging')
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout stag branch
+#         uses: actions/checkout@v4
+#         with:
+#           ref: stag
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}
       
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.0
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.5.0
       
-      - name: Terraform Init
-        run: terraform init
-        working-directory: terraform
+#       - name: Terraform Init
+#         run: terraform init
+#         working-directory: terraform
       
-      - name: Import Existing Resources
-        run: |
-          # Import existing EKS cluster and related resources
-          echo "Importing existing AWS resources..."
-          terraform import -var="environment=staging" aws_vpc.hayy_vpc vpc-0257f2aadc5ebd564 || echo "VPC already imported or not found"
-          terraform import -var="environment=staging" aws_subnet.public[0] subnet-05aa5bf1e2d40cb41 || echo "Public subnet 0 already imported or not found"
-          terraform import -var="environment=staging" aws_subnet.public[1] subnet-0778c80422d13de89 || echo "Public subnet 1 already imported or not found"
-          terraform import -var="environment=staging" aws_subnet.private[0] subnet-0c85517cbfcc358e9 || echo "Private subnet 0 already imported or not found"
-          terraform import -var="environment=staging" aws_subnet.private[1] subnet-0d08840a3550b86b2 || echo "Private subnet 1 already imported or not found"
-          terraform import -var="environment=staging" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9 || echo "EKS cluster security group already imported or not found"
-          terraform import -var="environment=staging" aws_security_group.eks_nodes sg-02b83d9ca13a87ea9 || echo "EKS nodes security group already imported or not found"
-          terraform import -var="environment=staging" aws_eks_cluster.hayy_cluster hayy-ai-cluster || echo "EKS cluster already imported or not found"
-          terraform import -var="environment=staging" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging || echo "Staging Fargate profile already imported or not found"
-          terraform import -var="environment=staging" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod || echo "Production Fargate profile already imported or not found"
-          echo "Import process completed"
-        working-directory: terraform
-        continue-on-error: true
+#       - name: Import Existing Resources
+#         run: |
+#           # Import existing EKS cluster and related resources
+#           echo "Importing existing AWS resources..."
+#           terraform import -var="environment=staging" aws_vpc.hayy_vpc vpc-0257f2aadc5ebd564 || echo "VPC already imported or not found"
+#           terraform import -var="environment=staging" aws_subnet.public[0] subnet-05aa5bf1e2d40cb41 || echo "Public subnet 0 already imported or not found"
+#           terraform import -var="environment=staging" aws_subnet.public[1] subnet-0778c80422d13de89 || echo "Public subnet 1 already imported or not found"
+#           terraform import -var="environment=staging" aws_subnet.private[0] subnet-0c85517cbfcc358e9 || echo "Private subnet 0 already imported or not found"
+#           terraform import -var="environment=staging" aws_subnet.private[1] subnet-0d08840a3550b86b2 || echo "Private subnet 1 already imported or not found"
+#           terraform import -var="environment=staging" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9 || echo "EKS cluster security group already imported or not found"
+#           terraform import -var="environment=staging" aws_security_group.eks_nodes sg-02b83d9ca13a87ea9 || echo "EKS nodes security group already imported or not found"
+#           terraform import -var="environment=staging" aws_eks_cluster.hayy_cluster hayy-ai-cluster || echo "EKS cluster already imported or not found"
+#           terraform import -var="environment=staging" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging || echo "Staging Fargate profile already imported or not found"
+#           terraform import -var="environment=staging" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod || echo "Production Fargate profile already imported or not found"
+#           echo "Import process completed"
+#         working-directory: terraform
+#         continue-on-error: true
       
-      - name: Check Drift
-        id: drift-check
-        run: |
-          # Run terraform plan and capture output
-          terraform plan -detailed-exitcode -no-color -var="environment=staging" > drift.txt 2>&1
-          EXIT_CODE=$?
-          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+#       - name: Check Drift
+#         id: drift-check
+#         run: |
+#           # Run terraform plan and capture output
+#           terraform plan -detailed-exitcode -no-color -var="environment=staging" > drift.txt 2>&1
+#           EXIT_CODE=$?
+#           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           
-          # Handle different exit codes
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "drift=true" >> $GITHUB_OUTPUT
-            echo "⚠️ DEMO MODE: Simulating drift detection in staging"
-            echo "Demo drift details:" >> drift.txt
-            echo "=================" >> drift.txt
-            echo "This is a demo notification showing drift detection capabilities." >> drift.txt
-            echo "In real scenarios, this would show actual infrastructure changes." >> drift.txt
-            terraform plan -no-color -var="environment=staging" >> drift.txt 2>&1
-          elif [ $EXIT_CODE -eq 2 ]; then
-            echo "drift=true" >> $GITHUB_OUTPUT
-            echo "⚠️ Drift detected in staging"
-            echo "Drift details:" >> drift.txt
-            echo "=================" >> drift.txt
-            terraform plan -no-color -var="environment=staging" >> drift.txt 2>&1
-          else
-            echo "drift=error" >> $GITHUB_OUTPUT
-            echo "❌ Error checking staging drift (exit code: $EXIT_CODE)"
-            echo "Error details:" >> drift.txt
-            echo "==============" >> drift.txt
-            cat drift.txt
-          fi
-        working-directory: terraform
-        continue-on-error: true
+#           # Handle different exit codes
+#           if [ $EXIT_CODE -eq 0 ]; then
+#             echo "drift=true" >> $GITHUB_OUTPUT
+#             echo "⚠️ DEMO MODE: Simulating drift detection in staging"
+#             echo "Demo drift details:" >> drift.txt
+#             echo "=================" >> drift.txt
+#             echo "This is a demo notification showing drift detection capabilities." >> drift.txt
+#             echo "In real scenarios, this would show actual infrastructure changes." >> drift.txt
+#             terraform plan -no-color -var="environment=staging" >> drift.txt 2>&1
+#           elif [ $EXIT_CODE -eq 2 ]; then
+#             echo "drift=true" >> $GITHUB_OUTPUT
+#             echo "⚠️ Drift detected in staging"
+#             echo "Drift details:" >> drift.txt
+#             echo "=================" >> drift.txt
+#             terraform plan -no-color -var="environment=staging" >> drift.txt 2>&1
+#           else
+#             echo "drift=error" >> $GITHUB_OUTPUT
+#             echo "❌ Error checking staging drift (exit code: $EXIT_CODE)"
+#             echo "Error details:" >> drift.txt
+#             echo "==============" >> drift.txt
+#             cat drift.txt
+#           fi
+#         working-directory: terraform
+#         continue-on-error: true
       
-      - name: Upload Drift Details
-        if: always()
-        run: |
-          if [ -f terraform/drift.txt ]; then
-            echo "Uploading drift details..."
-            cp terraform/drift.txt ./staging-drift-details.txt
-          else
-            echo "No drift.txt found, creating empty file"
-            echo "No drift details available" > ./staging-drift-details.txt
-          fi
+#       - name: Upload Drift Details
+#         if: always()
+#         run: |
+#           if [ -f terraform/drift.txt ]; then
+#             echo "Uploading drift details..."
+#             cp terraform/drift.txt ./staging-drift-details.txt
+#           else
+#             echo "No drift.txt found, creating empty file"
+#             echo "No drift details available" > ./staging-drift-details.txt
+#           fi
       
-      - name: Upload Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: staging-drift-details
-          path: staging-drift-details.txt
-          retention-days: 7
+#       - name: Upload Artifact
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: staging-drift-details
+#           path: staging-drift-details.txt
+#           retention-days: 7
       
-      - name: Send Slack Alert - Staging
-        if: steps.drift-check.outputs.drift == 'true' || steps.drift-check.outputs.drift == 'error'
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          slack-message: |
-            ⚠️ **Staging Drift Detected**
-            Changes found in staging infrastructure.
-            Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            Check the logs for details.
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+#       - name: Send Slack Alert - Staging
+#         if: steps.drift-check.outputs.drift == 'true' || steps.drift-check.outputs.drift == 'error'
+#         uses: slackapi/slack-github-action@v1.24.0
+#         with:
+#           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+#           slack-message: |
+#             ⚠️ **Staging Drift Detected**
+#             Changes found in staging infrastructure.
+#             Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+#             Check the logs for details.
+#         env:
+#           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
 
-  drift-check-production:
-    if: github.event.schedule == '0 */12 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout prod branch
-        uses: actions/checkout@v4
-        with:
-          ref: prod
+#   drift-check-production:
+#     if: github.event.schedule == '0 */12 * * *' || (github.event_name == 'workflow_dispatch' && github.event.inputs.environment == 'production')
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Checkout prod branch
+#         uses: actions/checkout@v4
+#         with:
+#           ref: prod
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ secrets.AWS_REGION }}
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v4
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-region: ${{ secrets.AWS_REGION }}
       
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
-        with:
-          terraform_version: 1.5.0
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v3
+#         with:
+#           terraform_version: 1.5.0
       
-      - name: Terraform Init
-        run: terraform init
-        working-directory: terraform
+#       - name: Terraform Init
+#         run: terraform init
+#         working-directory: terraform
       
-      - name: Import Existing Resources
-        run: |
-          # Import existing EKS cluster and related resources
-          terraform import -var="environment=staging" aws_vpc.hayy_vpc vpc-0257f2aadc5ebd564
-          terraform import -var="environment=staging" aws_subnet.public[0] subnet-05aa5bf1e2d40cb41
-          terraform import -var="environment=staging" aws_subnet.public[1] subnet-0778c80422d13de89
-          terraform import -var="environment=staging" aws_subnet.private[0] subnet-0c85517cbfcc358e9
-          terraform import -var="environment=staging" aws_subnet.private[1] subnet-0d08840a3550b86b2
-          terraform import -var="environment=staging" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9
-          terraform import -var="environment=staging" aws_security_group.eks_nodes sg-0ece80f7f12f0a9d9
-          terraform import -var="environment=staging" aws_eks_cluster.hayy_cluster hayy-ai-cluster
-          terraform import -var="environment=staging" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging
-          terraform import -var="environment=staging" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod
-        working-directory: terraform
-        continue-on-error: true
+#       - name: Import Existing Resources
+#         run: |
+#           # Import existing EKS cluster and related resources
+#           terraform import -var="environment=staging" aws_vpc.hayy_vpc vpc-0257f2aadc5ebd564
+#           terraform import -var="environment=staging" aws_subnet.public[0] subnet-05aa5bf1e2d40cb41
+#           terraform import -var="environment=staging" aws_subnet.public[1] subnet-0778c80422d13de89
+#           terraform import -var="environment=staging" aws_subnet.private[0] subnet-0c85517cbfcc358e9
+#           terraform import -var="environment=staging" aws_subnet.private[1] subnet-0d08840a3550b86b2
+#           terraform import -var="environment=staging" aws_security_group.eks_cluster sg-0ece80f7f12f0a9d9
+#           terraform import -var="environment=staging" aws_security_group.eks_nodes sg-0ece80f7f12f0a9d9
+#           terraform import -var="environment=staging" aws_eks_cluster.hayy_cluster hayy-ai-cluster
+#           terraform import -var="environment=staging" aws_eks_fargate_profile.staging hayy-ai-cluster:hayy-staging
+#           terraform import -var="environment=staging" aws_eks_fargate_profile.production hayy-ai-cluster:hayy-prod
+#         working-directory: terraform
+#         continue-on-error: true
       
-      - name: Check Drift
-        id: drift-check
-        run: |
-          # Run terraform plan and capture output
-          terraform plan -detailed-exitcode -no-color -var="environment=production" > drift.txt 2>&1
-          EXIT_CODE=$?
-          echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
+#       - name: Check Drift
+#         id: drift-check
+#         run: |
+#           # Run terraform plan and capture output
+#           terraform plan -detailed-exitcode -no-color -var="environment=production" > drift.txt 2>&1
+#           EXIT_CODE=$?
+#           echo "exit_code=$EXIT_CODE" >> $GITHUB_OUTPUT
           
-          # Handle different exit codes
-          if [ $EXIT_CODE -eq 0 ]; then
-            echo "drift=true" >> $GITHUB_OUTPUT
-            echo "🚨 DEMO MODE: Simulating critical drift detection in production"
-            echo "Demo drift details:" >> drift.txt
-            echo "=================" >> drift.txt
-            echo "This is a demo notification showing critical production drift detection." >> drift.txt
-            echo "In real scenarios, this would show actual infrastructure changes requiring immediate attention." >> drift.txt
-            terraform plan -no-color -var="environment=production" >> drift.txt 2>&1
-          elif [ $EXIT_CODE -eq 2 ]; then
-            echo "drift=true" >> $GITHUB_OUTPUT
-            echo "🚨 CRITICAL: Drift detected in production"
-            echo "Drift details:" >> drift.txt
-            echo "=================" >> drift.txt
-            terraform plan -no-color -var="environment=production" >> drift.txt 2>&1
-          else
-            echo "drift=error" >> $GITHUB_OUTPUT
-            echo "❌ Error checking production drift (exit code: $EXIT_CODE)"
-            echo "Error details:" >> drift.txt
-            echo "==============" >> drift.txt
-            cat drift.txt
-          fi
-        working-directory: terraform
-        continue-on-error: true
+#           # Handle different exit codes
+#           if [ $EXIT_CODE -eq 0 ]; then
+#             echo "drift=true" >> $GITHUB_OUTPUT
+#             echo "🚨 DEMO MODE: Simulating critical drift detection in production"
+#             echo "Demo drift details:" >> drift.txt
+#             echo "=================" >> drift.txt
+#             echo "This is a demo notification showing critical production drift detection." >> drift.txt
+#             echo "In real scenarios, this would show actual infrastructure changes requiring immediate attention." >> drift.txt
+#             terraform plan -no-color -var="environment=production" >> drift.txt 2>&1
+#           elif [ $EXIT_CODE -eq 2 ]; then
+#             echo "drift=true" >> $GITHUB_OUTPUT
+#             echo "🚨 CRITICAL: Drift detected in production"
+#             echo "Drift details:" >> drift.txt
+#             echo "=================" >> drift.txt
+#             terraform plan -no-color -var="environment=production" >> drift.txt 2>&1
+#           else
+#             echo "drift=error" >> $GITHUB_OUTPUT
+#             echo "❌ Error checking production drift (exit code: $EXIT_CODE)"
+#             echo "Error details:" >> drift.txt
+#             echo "==============" >> drift.txt
+#             cat drift.txt
+#           fi
+#         working-directory: terraform
+#         continue-on-error: true
       
-      - name: Upload Drift Details
-        if: always()
-        run: |
-          if [ -f terraform/drift.txt ]; then
-            echo "Uploading drift details..."
-            cp terraform/drift.txt ./production-drift-details.txt
-          else
-            echo "No drift.txt found, creating empty file"
-            echo "No drift details available" > ./production-drift-details.txt
-          fi
+#       - name: Upload Drift Details
+#         if: always()
+#         run: |
+#           if [ -f terraform/drift.txt ]; then
+#             echo "Uploading drift details..."
+#             cp terraform/drift.txt ./production-drift-details.txt
+#           else
+#             echo "No drift.txt found, creating empty file"
+#             echo "No drift details available" > ./production-drift-details.txt
+#           fi
       
-      - name: Upload Artifact
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: production-drift-details
-          path: production-drift-details.txt
-          retention-days: 7
+#       - name: Upload Artifact
+#         if: always()
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: production-drift-details
+#           path: production-drift-details.txt
+#           retention-days: 7
       
-      - name: Send Slack Alert - Production
-        if: steps.drift-check.outputs.drift == 'true' || steps.drift-check.outputs.drift == 'error'
-        uses: slackapi/slack-github-action@v1.24.0
-        with:
-          channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
-          slack-message: |
-            🚨 **CRITICAL: Production Drift Detected**
-            Manual review required for production infrastructure.
-            Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-            Check the logs for details.
-        env:
-          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+#       - name: Send Slack Alert - Production
+#         if: steps.drift-check.outputs.drift == 'true' || steps.drift-check.outputs.drift == 'error'
+#         uses: slackapi/slack-github-action@v1.24.0
+#         with:
+#           channel-id: ${{ secrets.SLACK_CHANNEL_ID }}
+#           slack-message: |
+#             🚨 **CRITICAL: Production Drift Detected**
+#             Manual review required for production infrastructure.
+#             Workflow: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+#             Check the logs for details.
+#         env:
+#           SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
