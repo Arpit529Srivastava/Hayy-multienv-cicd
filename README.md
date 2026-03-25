@@ -2,7 +2,7 @@
 
 A comprehensive, production-ready CI/CD pipeline for the Hayy Task Manager API with multi-environment deployment, automated testing, security scanning, and infrastructure monitoring.
 
-## 🚀 Complete CI/CD Pipeline Features
+##  Complete CI/CD Pipeline Features
 
 ### **Application Features**
 - **Task CRUD Operations**: Create, read, update, and delete tasks
